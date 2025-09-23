@@ -1,0 +1,28 @@
+{% extends 'books/base.html' %}
+{% block content %}
+<h1>Список книг</h1>
+{% if books %}
+<table>
+    <thead>
+        <tr>
+            <th>Название</th>
+            <th>Год</th>
+            <th>Автор</th>
+            <th>Жанр</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for book in books %}
+        <tr>
+            <td>{{ book.title }}</td>
+            <td>{{ book.year }}</td>
+            <td>{{ book.author }}</td>
+            <td>{{ book.genre }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>Нет доступных книг.</p>
+{% endif %}
+{% endblock %}
