@@ -5,6 +5,7 @@ from django.core.files.storage import default_storage
 from django.conf import settings
 from datetime import datetime
 
+ALL_BOOKS_FILE = os.path.join(settings.BOOKS_JSON_DIR, 'all_books.json')
 
 def sanitize_filename(filename):
     """Безопасное имя файла"""
@@ -64,40 +65,30 @@ def validate_json_file(file_path):
 
 
 def load_all_books():
-    """Загружает все книги из всех JSON-файлов в папке"""
-    all_books = []
+    """Загружает все книги из общего файла и нормализует поля"""
+    books = load_all_books_from_file()
     expected_fields = ['title', 'year', 'author', 'genre']
 
-    # Проверяем, существует ли папка
-    if not os.path.exists(settings.BOOKS_JSON_DIR):
-        return []
-
-    for fname in os.listdir(settings.BOOKS_JSON_DIR):
-        if fname.endswith('.json'):
-            filepath = os.path.join(settings.BOOKS_JSON_DIR, fname)
-            try:
-                with open(filepath, 'r', encoding='utf-8') as f:
-                    data = json.load(f)
-
-                # Поддержка: файл может содержать объект или массив
-                if isinstance(data, dict):
-                    all_books.append(data)
-                elif isinstance(data, list):
-                    all_books.extend(data)  # на случай, если кто-то сохранил массив
-            except Exception as e:
-                print(f"Ошибка чтения файла {fname}: {e}")
-                continue
-
-    # Нормализация: заполняем недостающие поля прочерком
-    normalized_books = []
-    for book in all_books:
+    normalized = []
+    for book in books:
         norm = {}
         for field in expected_fields:
-            value = book.get(field, "")
-            norm[field] = value if value else "—"
-        normalized_books.append(norm)
+            value = book.get(field, None)
 
-    return normalized_books
+            # Если значение отсутствует или None
+            if value is None or value == "":
+                norm[field] = "—"
+            else:
+                # Преобразуем в строку и обрезаем пробелы только если это строка
+                if isinstance(value, str):
+                    cleaned = value.strip()
+                    norm[field] = cleaned if cleaned else "—"
+                else:
+                    # Для чисел, булевых и др. — просто в строку
+                    norm[field] = str(value)
+        normalized.append(norm)
+
+    return normalized
 
 def save_book_as_json(book_data):
     """Сохраняет одну книгу в отдельный JSON-файл"""
@@ -113,3 +104,24 @@ def save_book_as_json(book_data):
         json.dump(book_data, f, ensure_ascii=False, indent=4)
 
     return filepath
+
+def load_all_books_from_file():
+    """Читает все книги из общего файла all_books.json"""
+    if not os.path.exists(ALL_BOOKS_FILE):
+        return []
+    try:
+        with open(ALL_BOOKS_FILE, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+            if isinstance(data, list):
+                return data
+            else:
+                return []
+    except Exception:
+        return []
+
+
+def save_all_books_to_file(books):
+    """Сохраняет список книг в общий файл"""
+    os.makedirs(os.path.dirname(ALL_BOOKS_FILE), exist_ok=True)
+    with open(ALL_BOOKS_FILE, 'w', encoding='utf-8') as f:
+        json.dump(books, f, ensure_ascii=False, indent=4)
