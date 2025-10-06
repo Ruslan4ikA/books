@@ -1,0 +1,34 @@
+<div class="mb-3">
+    <input type="text" id="search-input" class="form-control w-50 mx-auto" placeholder="Поиск по названию или автору...">
+</div>
+
+<table class="table table-striped table-hover shadow-sm" id="book-table">
+    <thead>
+        <tr>
+            <th>Название</th>
+            <th>Год</th>
+            <th>Автор</th>
+            <th>Жанр</th>
+            <th>Действия</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for book in books %}
+        <tr data-id="{{ book.id }}">
+            <td>{{ book.title }}</td>
+            <td>{{ book.year }}</td>
+            <td>{{ book.author|default:"—" }}</td>
+            <td>{{ book.genre|default:"—" }}</td>
+            <td>
+                <button class="btn btn-sm btn-warning edit-btn" data-bs-toggle="modal" data-bs-target="#editModal"
+                        data-id="{{ book.id }}"
+                        data-title="{{ book.title }}"
+                        data-year="{{ book.year }}"
+                        data-author="{{ book.author|default:'' }}"
+                        data-genre="{{ book.genre|default:'' }}">✏️</button>
+                <a href="#" class="btn btn-sm btn-danger delete-btn" data-id="{{ book.id }}">🗑️</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>

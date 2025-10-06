@@ -38,11 +38,6 @@ ALLOWED_HOSTS = []
 # Время разработки: Django будет обслуживать статику
 STATIC_URL = '/static/'
 
-# Дополнительные пути к статике (включая папку static в приложении)
-STATICFILES_DIRS = [
-    BASE_DIR / "static",  # если есть глобальная папка
-]
-
 # Куда collectstatic соберёт файлы (не нужно сейчас)
 STATIC_ROOT = None
 

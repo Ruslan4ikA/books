@@ -1,30 +1,149 @@
 {% extends 'books/base.html' %}
+
+{% block title %}Главная{% endblock %}
+
 {% block content %}
-<h1>Список книг</h1>
+<h1 class="text-center mb-4">📚 Управление книгами</h1>
+
+<div class="text-center mb-4">
+    <a href="{% url 'books:add_book' %}" class="btn btn-success me-2">➕ Добавить книгу</a>
+    <a href="{% url 'books:upload_file' %}" class="btn btn-info text-white">📤 Загрузить файл</a>
+</div>
+
+<ul class="nav nav-tabs mb-4">
+    <li class="nav-item">
+        <a class="nav-link {% if source == 'file' %}active{% endif %}"
+           href="?source=file">Из файлов</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {% if source == 'db' %}active{% endif %}"
+           href="?source=db">Из базы данных</a>
+    </li>
+</ul>
+
 {% if books %}
-<table>
-    <thead>
-        <tr>
-            <th>Название</th>
-            <th>Год</th>
-            <th>Автор</th>
-            <th>Жанр</th>
-            <th>Страниц</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for book in books %}
-        <tr>
-            <td>{{ book.title }}</td>
-            <td>{{ book.year }}</td>
-            <td>{{ book.author }}</td>
-            <td>{{ book.genre }}</td>
-            <td>{{ book.pages }}</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+    {% if source == 'db' %}
+        {% include 'books/partials/book_list_db.html' %}
+    {% else %}
+        {% include 'books/partials/book_list_file.html' %}
+    {% endif %}
 {% else %}
-<p>Нет доступных книг.</p>
+    <div class="alert alert-info text-center">Нет данных для отображения.</div>
 {% endif %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const searchInput = document.getElementById('search-input');
+    const tableBody = document.querySelector('#book-table tbody');
+
+    // Поиск
+    searchInput.addEventListener('input', function () {
+        const q = this.value;
+        fetch(`{% url 'books:search_books' %}?q=${q}`)
+            .then(r => r.json())
+            .then(data => {
+                tableBody.innerHTML = '';
+                data.forEach(book => {
+                    const row = `
+                        <tr data-id="${book.id}">
+                            <td>${book.title}</td>
+                            <td>${book.year}</td>
+                            <td>${book.author || '—'}</td>
+                            <td>${book.genre || '—'}</td>
+                            <td>
+                                <button class="btn btn-sm btn-warning edit-btn" data-bs-toggle="modal"
+                                        data-bs-target="#editModal" data-id="${book.id}"
+                                        data-title="${book.title}"
+                                        data-year="${book.year}"
+                                        data-author="${book.author || ''}"
+                                        data-genre="${book.genre || ''}">✏️</button>
+                                <a href="#" class="btn btn-sm btn-danger delete-btn" data-id="${book.id}">🗑️</a>
+                            </td>
+                        </tr>`;
+                    tableBody.insertAdjacentHTML('beforeend', row);
+                });
+            });
+    });
+
+    // Передача данных в модальное окно
+    document.querySelectorAll('.edit-btn').forEach(btn => {
+        btn.addEventListener('click', function () {
+            const modal = document.getElementById('editModal');
+            modal.querySelector('#edit-id').value = this.dataset.id;
+            modal.querySelector('#edit-title').value = this.dataset.title;
+            modal.querySelector('#edit-year').value = this.dataset.year;
+            modal.querySelector('#edit-author').value = this.dataset.author;
+            modal.querySelector('#edit-genre').value = this.dataset.genre;
+        });
+    });
+
+    // Удаление
+    document.addEventListener('click', function (e) {
+        if (e.target && e.target.classList.contains('delete-btn')) {
+            e.preventDefault();
+            if (confirm('Удалить эту книгу?')) {
+                const id = e.target.dataset.id;
+                fetch(`/delete/${id}/`, { method: 'POST', headers: {'X-CSRFToken': '{{ csrf_token }}'} })
+                    .then(() => location.reload());
+            }
+        }
+    });
+});
+    document.getElementById('edit-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    const formData = new FormData(this);
+    fetch('{% url "books:edit_book" pk=0 %}'.replace('0', formData.get('id')), {
+        method: 'POST',
+        body: formData,
+        headers: {'X-CSRFToken': '{{ csrf_token }}'}
+    }).then(r => r.json()).then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Ошибка: ' + data.error);
+        }
+    });
+});
+</script>
+
+<!-- Modal -->
+<div class="modal fade" id="editModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="edit-form">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title">Редактировать книгу</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="edit-id" name="id">
+                    <div class="mb-3">
+                        <label>Название</label>
+                        <input type="text" class="form-control" id="edit-title" name="title" required>
+                    </div>
+                    <div class="mb-3">
+                        <label>Год</label>
+                        <input type="number" class="form-control" id="edit-year" name="year" required min="0" max="2025">
+                    </div>
+                    <div class="mb-3">
+                        <label>Автор</label>
+                        <input type="text" class="form-control" id="edit-author" name="author">
+                    </div>
+                    <div class="mb-3">
+                        <label>Жанр</label>
+                        <input type="text" class="form-control" id="edit-genre" name="genre">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-primary">Сохранить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+<footer>&copy; 2025 Учебный проект Django</footer>
 {% endblock %}

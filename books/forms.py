@@ -7,3 +7,8 @@ class BookForm(forms.Form):
     author = forms.CharField(label="Автор", max_length=200, required=False)
     genre = forms.CharField(label="Жанр", max_length=100, required=False)
     pages = forms.CharField(label="Количество страниц",  max_length=100, required=False)
+    save_to = forms.ChoiceField(
+        label="Сохранить в",
+        choices=[('file', 'Файл (JSON)'), ('db', 'Базу данных')],
+        widget=forms.RadioSelect
+    )

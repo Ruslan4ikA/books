@@ -11,49 +11,98 @@ from .utils import (
     sanitize_filename, validate_json_file,
     load_all_books_from_file, save_all_books_to_file
 )
+from django.shortcuts import render, get_object_or_404, HttpResponseRedirect
+from django.http import JsonResponse
+from django.urls import reverse
+from django.contrib import messages
+from django.db.models import Q
+from .models import Book
+from .forms import BookForm
+from .utils import load_all_books
 
 
 def index(request):
-    books = load_all_books()
-    if not books:
-        messages.info(request, "Нет сохранённых книг.")
-    return render(request, 'books/index.html', {'books': books})
+    source = request.GET.get('source', 'file')  # 'file' или 'db'
 
+    if source == 'db':
+        books = list(Book.objects.all().values())
+        db_active = True
+    else:
+        books = load_all_books()
+        db_active = False
+
+    return render(request, 'books/index.html', {
+        'books': books,
+        'db_active': db_active,
+        'source': source
+    })
 
 # books/views.py
+
+# books/views.py
+
+from django.shortcuts import render, HttpResponseRedirect
+from django.urls import reverse
+from django.contrib import messages
+from .forms import BookForm
+from .models import Book
+from .utils import load_all_books_from_file, save_all_books_to_file
 
 def add_book(request):
     if request.method == 'POST':
         form = BookForm(request.POST)
         if form.is_valid():
             # Собираем данные новой книги
-            new_book = {
-                'title': form.cleaned_data['title'].strip(),
-                'year': form.cleaned_data['year'],  # int
-            }
-            if form.cleaned_data['author']:
-                new_book['author'] = form.cleaned_data['author'].strip()
-            if form.cleaned_data['genre']:
-                new_book['genre'] = form.cleaned_data['genre'].strip()
-            if form.cleaned_data['pages']:
-                new_book['pages'] = form.cleaned_data['pages'].strip()
+            title = form.cleaned_data['title'].strip()
+            year = form.cleaned_data['year']
+            author = form.cleaned_data['author'].strip() if form.cleaned_data['author'] else None
+            genre = form.cleaned_data['genre'].strip() if form.cleaned_data['genre'] else None
+            pages = form.cleaned_data['pages'].strip() if form.cleaned_data['pages'] else None
 
-            # Загружаем существующие книги
-            all_books = load_all_books_from_file()
+            # Получаем выбор пользователя: куда сохранять
+            save_to = form.cleaned_data['save_to']
 
-            # Проверяем дубликат: совпадение по title и year
-            is_duplicate = any(
-                book.get('title') == new_book['title'] and
-                book.get('year') == new_book['year']
-                for book in all_books
-            )
-
-            if is_duplicate:
-                messages.warning(request, f"Книга '{new_book['title']}' ({new_book['year']}) уже существует.")
+            if save_to == 'db':
+                # Сохранение в базу данных SQLite
+                if Book.objects.filter(title=title, year=year).exists():
+                    messages.warning(request, f"Книга '{title}' ({year}) уже существует в базе данных.")
+                else:
+                    Book.objects.create(
+                        title=title,
+                        year=year,
+                        author=author,
+                        genre=genre,
+                        pages=pages
+                    )
+                    messages.success(request, "Книга успешно добавлена в базу данных!")
             else:
-                all_books.append(new_book)
-                save_all_books_to_file(all_books)
-                messages.success(request, "Книга успешно добавлена!")
+                # Сохранение в файл JSON (старая логика)
+                all_books = load_all_books_from_file()
+
+                new_book = {
+                    'title': title,
+                    'year': year,
+                }
+                if author:
+                    new_book['author'] = author
+                if genre:
+                    new_book['genre'] = genre
+                if pages:
+                    new_book['pages'] = pages
+
+                # Проверяем дубликат по названию и году
+                is_duplicate = any(
+                    book.get('title') == new_book['title'] and
+                    book.get('year') == new_book['year']
+                    for book in all_books
+                )
+
+                if is_duplicate:
+                    messages.warning(request, f"Книга '{new_book['title']}' ({new_book['year']}) уже существует в файлах.")
+                else:
+                    all_books.append(new_book)
+                    save_all_books_to_file(all_books)
+                    messages.success(request, "Книга успешно добавлена в файл!")
 
             return HttpResponseRedirect(reverse('books:index'))
     else:
@@ -117,3 +166,45 @@ def upload_file(request):
                              f"Файл '{uploaded_file.name}' успешно загружен. Добавлено книг: {added_count}. Всего в базе: {len(all_books)}.")
 
     return render(request, 'books/upload.html')
+
+def search_books(request):
+    query = request.GET.get('q', '')
+    if query:
+        books = Book.objects.filter(
+            Q(title__icontains=query) | Q(author__icontains=query)
+        ).values()
+    else:
+        books = Book.objects.all().values()
+    return JsonResponse(list(books), safe=False)
+
+
+def edit_book(request, pk):
+    book = get_object_or_404(Book, pk=pk)
+    if request.method == 'POST':
+        form = BookForm(request.POST)
+        if form.is_valid():
+            title = form.cleaned_data['title']
+            year = form.cleaned_data['year']
+            author = form.cleaned_data['author'] or None
+            genre = form.cleaned_data['genre'] or None
+
+            # Проверка дубликата (кроме самой книги)
+            if Book.objects.exclude(pk=pk).filter(title=title, year=year).exists():
+                return JsonResponse({'success': False, 'error': 'Такая книга уже существует.'})
+
+            book.title = title
+            book.year = year
+            book.author = author
+            book.genre = genre
+            book.save()
+
+            return JsonResponse({'success': True})
+        else:
+            return JsonResponse({'success': False, 'error': 'Проверьте корректность данных.'})
+    return JsonResponse({'success': False}, status=405)
+
+
+def delete_book(request, pk):
+    book = get_object_or_404(Book, pk=pk)
+    book.delete()
+    return JsonResponse({'success': True})
