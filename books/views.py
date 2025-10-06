@@ -35,6 +35,8 @@ def add_book(request):
                 new_book['author'] = form.cleaned_data['author'].strip()
             if form.cleaned_data['genre']:
                 new_book['genre'] = form.cleaned_data['genre'].strip()
+            if form.cleaned_data['pages']:
+                new_book['pages'] = form.cleaned_data['pages'].strip()
 
             # Загружаем существующие книги
             all_books = load_all_books_from_file()

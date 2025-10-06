@@ -67,7 +67,7 @@ def validate_json_file(file_path):
 def load_all_books():
     """Загружает все книги из общего файла и нормализует поля"""
     books = load_all_books_from_file()
-    expected_fields = ['title', 'year', 'author', 'genre']
+    expected_fields = ['title', 'year', 'author', 'genre', 'pages']
 
     normalized = []
     for book in books:
