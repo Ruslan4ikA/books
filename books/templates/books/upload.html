@@ -1,10 +1,25 @@
 {% extends 'books/base.html' %}
+
+{% block title %}Загрузить файл{% endblock %}
+
 {% block content %}
-<h1>Загрузить файл с книгами</h1>
-<form method="post" enctype="multipart/form-data">
-    {% csrf_token %}
-    <p><input type="file" name="file" accept=".json" required></p>
-    <button type="submit">Загрузить</button>
-</form>
-<a href="{% url 'books:index' %}">← Назад</a>
+<div class="form-container">
+    <h2>📤 Загрузить файл</h2>
+    <p>Поддерживаются форматы: <strong>.json</strong> и <strong>.xml</strong></p>
+
+    <form method="post" enctype="multipart/form-data" class="upload-form">
+        {% csrf_token %}
+
+        <div class="form-group">
+            <label for="file">Выберите файл</label>
+            <input type="file" name="file" id="file" accept=".json,.xml" required class="form-control">
+        </div>
+
+        <div class="text-center">
+            <button type="submit" class="btn btn-primary">Загрузить файл</button>
+        </div>
+    </form>
+
+    <a href="{% url 'books:index' %}" class="back-link">← Назад к списку</a>
+</div>
 {% endblock %}
