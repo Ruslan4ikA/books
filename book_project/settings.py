@@ -16,6 +16,7 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 import os
 
+from decouple import config
 # ...
 
 MEDIA_URL = '/media/'
@@ -27,13 +28,16 @@ BOOKS_JSON_DIR = os.path.join(MEDIA_ROOT, 'books_json')
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-qk0vscnwg#s#aju%3ue9$4)39jlwil4(%yym&lbv&05+l7=mjd'
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# Безопасный секретный ключ
+SECRET_KEY = config('SECRET_KEY')
 
-ALLOWED_HOSTS = []
+# Режим отладки
+DEBUG = config('DEBUG', default=False, cast=bool)
+
+# ALLOWED_HOSTS — особый случай: config.list() парсит строку как список
+from decouple import Csv
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='', cast=Csv())
 
 # Время разработки: Django будет обслуживать статику
 STATIC_URL = '/static/'
