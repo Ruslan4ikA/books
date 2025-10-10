@@ -37,7 +37,7 @@ DEBUG = config('DEBUG', default=False, cast=bool)
 
 # ALLOWED_HOSTS — особый случай: config.list() парсит строку как список
 from decouple import Csv
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='', cast=Csv())
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default=[], cast=Csv())
 
 # Время разработки: Django будет обслуживать статику
 STATIC_URL = '/static/'
