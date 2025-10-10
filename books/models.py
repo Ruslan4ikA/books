@@ -9,7 +9,7 @@ class Book(models.Model):
     class Meta:
         verbose_name = "Книга"
         verbose_name_plural = "Книги"
-        unique_together = ('title', 'year')  # Защита от дубликатов
+        unique_together = ('title', 'author')  # Защита от дубликатов
 
     def __str__(self):
         return f"{self.title} ({self.year})"

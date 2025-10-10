@@ -9,6 +9,7 @@
             <th>Год</th>
             <th>Автор</th>
             <th>Жанр</th>
+            <th>Кол-во страниц</th>
             <th>Действия</th>
         </tr>
     </thead>
@@ -19,13 +20,15 @@
             <td>{{ book.year }}</td>
             <td>{{ book.author|default:"—" }}</td>
             <td>{{ book.genre|default:"—" }}</td>
+            <td>{{ book.pages|default:"—" }}</td>
             <td>
                 <button class="btn btn-sm btn-warning edit-btn" data-bs-toggle="modal" data-bs-target="#editModal"
                         data-id="{{ book.id }}"
                         data-title="{{ book.title }}"
                         data-year="{{ book.year }}"
                         data-author="{{ book.author|default:'' }}"
-                        data-genre="{{ book.genre|default:'' }}">✏️</button>
+                        data-genre="{{ book.genre|default:'' }}"
+                        data-pages="{{ book.pages|default:'' }}">✏️</button>
                 <a href="#" class="btn btn-sm btn-danger delete-btn" data-id="{{ book.id }}">🗑️</a>
             </td>
         </tr>

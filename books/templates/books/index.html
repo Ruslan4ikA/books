@@ -3,12 +3,7 @@
 {% block title %}Главная{% endblock %}
 
 {% block content %}
-<h1 class="text-center mb-4">📚 Управление книгами</h1>
 
-<div class="text-center mb-4">
-    <a href="{% url 'books:add_book' %}" class="btn btn-success me-2">➕ Добавить книгу</a>
-    <a href="{% url 'books:upload_file' %}" class="btn btn-info text-white">📤 Загрузить файл</a>
-</div>
 
 <ul class="nav nav-tabs mb-4">
     <li class="nav-item">
@@ -51,13 +46,15 @@ document.addEventListener('DOMContentLoaded', function () {
                             <td>${book.year}</td>
                             <td>${book.author || '—'}</td>
                             <td>${book.genre || '—'}</td>
+                            <td>${book.pages || '—'}</td>
                             <td>
                                 <button class="btn btn-sm btn-warning edit-btn" data-bs-toggle="modal"
                                         data-bs-target="#editModal" data-id="${book.id}"
                                         data-title="${book.title}"
                                         data-year="${book.year}"
                                         data-author="${book.author || ''}"
-                                        data-genre="${book.genre || ''}">✏️</button>
+                                        data-genre="${book.genre || ''}"
+                                        data-pages="${book.pages || ''}">✏️</button>
                                 <a href="#" class="btn btn-sm btn-danger delete-btn" data-id="${book.id}">🗑️</a>
                             </td>
                         </tr>`;
@@ -75,6 +72,7 @@ document.addEventListener('DOMContentLoaded', function () {
             modal.querySelector('#edit-year').value = this.dataset.year;
             modal.querySelector('#edit-author').value = this.dataset.author;
             modal.querySelector('#edit-genre').value = this.dataset.genre;
+            modal.querySelector('#edit-pages').value = this.dataset.pages;
         });
     });
 
@@ -135,6 +133,10 @@ document.addEventListener('DOMContentLoaded', function () {
                         <label>Жанр</label>
                         <input type="text" class="form-control" id="edit-genre" name="genre">
                     </div>
+                    <div class="mb-3">
+                        <label>Кол-во страниц</label>
+                        <input type="text" class="form-control" id="edit-pages" name="pages">
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
@@ -145,5 +147,4 @@ document.addEventListener('DOMContentLoaded', function () {
     </div>
 </div>
 {% endblock %}
-<footer>&copy; 2025 Учебный проект Django</footer>
 {% endblock %}

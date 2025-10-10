@@ -1,7 +1,7 @@
 /* books/static/css/style.css */
 
 /* ====================== ОБЩИЕ СТИЛИ ====================== */
-/*
+
 * {
     margin: 0;
     padding: 0;
@@ -158,7 +158,7 @@ footer {
 
 /* ====================== СТИЛИ ФОРМ ====================== */
 
-/* Контейнер для форм *//*
+/* Контейнер для форм */
 .form-container {
     max-width: 600px;
     margin: 0 auto;
@@ -178,9 +178,9 @@ footer {
     font-size: 1em;
 }
 
-/* Группа полей формы *//*
+/* Группа полей формы */
 .form-group {
-    margin-bottom: 18px;
+    margin-bottom: 10px;
 }
 
 .form-group label {
@@ -207,7 +207,7 @@ footer {
     box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
 }
 
-/* Кнопки *//*
+/* Кнопки */
 .btn {
     display: inline-block;
     padding: 12px 24px;
@@ -239,7 +239,7 @@ footer {
     color: white;
 }
 
-/* Центрирование *//*
+/* Центрирование */
 .text-center {
     text-align: center;
 }
@@ -252,7 +252,7 @@ footer {
     margin-bottom: 30px;
 }
 
-/* Ссылка "Назад" *//*
+/* Ссылка "Назад" */
 .back-link {
     color: #3498db;
     text-decoration: none;
@@ -265,7 +265,7 @@ footer {
     text-decoration: underline;
 }
 
-/* Форма с загрузкой файла *//*
+/* Форма с загрузкой файла */
 .upload-form {
     background: white;
     padding: 30px;
@@ -280,14 +280,14 @@ footer {
     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
-/* Сообщения об ошибках *//*
+/* Сообщения об ошибках */
 .form-error {
     color: #e74c3c;
     font-size: 0.9em;
     margin-top: 4px;
 }
 
-*/
+
 /* Дополнительные стили */
 h1, h2 {
     color: #2c3e50;

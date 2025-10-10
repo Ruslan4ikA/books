@@ -5,14 +5,14 @@
 {% block content %}
 <div class="form-container">
     <h2>📤 Загрузить файл</h2>
-    <p>Поддерживаются форматы: <strong>.json</strong> и <strong>.xml</strong></p>
+    <p>Поддерживаются форматы: <strong>.json</strong></p>
 
     <form method="post" enctype="multipart/form-data" class="upload-form">
         {% csrf_token %}
 
         <div class="form-group">
             <label for="file">Выберите файл</label>
-            <input type="file" name="file" id="file" accept=".json,.xml" required class="form-control">
+            <input type="file" name="file" id="file" accept=".json" required class="form-control">
         </div>
 
         <div class="text-center">

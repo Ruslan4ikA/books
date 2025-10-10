@@ -1,10 +1,4 @@
-# books/views.py
-from django.shortcuts import render
-from django.http import HttpResponse, HttpResponseRedirect
-from django.urls import reverse
-from django.contrib import messages
 import os
-from .forms import BookForm
 from .utils import *
 from django.core.files.uploadedfile import UploadedFile
 from .utils import (
@@ -37,17 +31,6 @@ def index(request):
         'source': source
     })
 
-# books/views.py
-
-# books/views.py
-
-from django.shortcuts import render, HttpResponseRedirect
-from django.urls import reverse
-from django.contrib import messages
-from .forms import BookForm
-from .models import Book
-from .utils import load_all_books_from_file, save_all_books_to_file
-
 def add_book(request):
     if request.method == 'POST':
         form = BookForm(request.POST)
@@ -64,8 +47,8 @@ def add_book(request):
 
             if save_to == 'db':
                 # Сохранение в базу данных SQLite
-                if Book.objects.filter(title=title, year=year).exists():
-                    messages.warning(request, f"Книга '{title}' ({year}) уже существует в базе данных.")
+                if Book.objects.filter(title=title, author=author).exists():
+                    messages.warning(request, f"Книга '{title}' ({author}) уже существует в базе данных.")
                 else:
                     Book.objects.create(
                         title=title,
@@ -150,14 +133,14 @@ def upload_file(request):
         # Добавляем новые (можно проверить на дубликаты по title+year, если нужно)
         initial_count = len(all_books)
         for book in new_books:
-            # Простая защита от полных дубликатов (по названию и году)
-            if not any(b.get('title') == book['title'] and b.get('year') == book['year'] for b in all_books):
+            # Простая защита от полных дубликатов (по названию и автору)
+            if not any(b.get('title') == book['title'] and b.get('author') == book['author'] for b in all_books):
                 all_books.append(book)
 
         added_count = len(all_books) - initial_count
         if added_count == 0:
             messages.success(request,
-                         f"Файл '{uploaded_file.name}' не загружен. Книга с таким названием и годом уже существует")
+                         f"Файл '{uploaded_file.name}' не загружен. Книга с таким названием и автором уже существует")
         else:
             # Сохраняем всё в один файл
             save_all_books_to_file(all_books)
@@ -187,6 +170,7 @@ def edit_book(request, pk):
             year = form.cleaned_data['year']
             author = form.cleaned_data['author'] or None
             genre = form.cleaned_data['genre'] or None
+            pages = form.cleaned_data['pages'] or None
 
             # Проверка дубликата (кроме самой книги)
             if Book.objects.exclude(pk=pk).filter(title=title, year=year).exists():
@@ -196,11 +180,12 @@ def edit_book(request, pk):
             book.year = year
             book.author = author
             book.genre = genre
+            book.pages = pages
             book.save()
 
             return JsonResponse({'success': True})
         else:
-            return JsonResponse({'success': False, 'error': 'Проверьте корректность данных.'})
+            return JsonResponse({'success': False, 'error': 'Проверьте корректность данных. Возможно такая книга уже есть или не заполнено обязательное поле'})
     return JsonResponse({'success': False}, status=405)
 
 
