@@ -165,7 +165,8 @@ def edit_book(request, pk):
     book = get_object_or_404(Book, pk=pk)
     if request.method == 'POST':
         form = BookForm(request.POST)
-        if form.is_valid():
+        print(form['title'])
+        if form:
             title = form.cleaned_data['title']
             year = form.cleaned_data['year']
             author = form.cleaned_data['author'] or None

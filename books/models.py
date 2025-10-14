@@ -12,4 +12,4 @@ class Book(models.Model):
         unique_together = ('title', 'author')  # Защита от дубликатов
 
     def __str__(self):
-        return f"{self.title} ({self.year})"
+        return f"{self.title} ({self.author})"
