@@ -165,18 +165,21 @@ def edit_book(request, pk):
     book = get_object_or_404(Book, pk=pk)
     if request.method == 'POST':
         form = BookForm(request.POST)
-        print(form['title'])
-        if form:
-            title = form.cleaned_data['title']
+        if form.is_valid():
+            title = form.cleaned_data['title'].strip()
             year = form.cleaned_data['year']
-            author = form.cleaned_data['author'] or None
-            genre = form.cleaned_data['genre'] or None
-            pages = form.cleaned_data['pages'] or None
+            author = form.cleaned_data.get('author', '').strip() or None
+            genre = form.cleaned_data.get('genre', '').strip() or None
+            pages = form.cleaned_data.get('pages', '').strip() or None
 
             # Проверка дубликата (кроме самой книги)
             if Book.objects.exclude(pk=pk).filter(title=title, year=year).exists():
-                return JsonResponse({'success': False, 'error': 'Такая книга уже существует.'})
+                return JsonResponse({
+                    'success': False,
+                    'error': f'Книга "{title}" ({year}) уже существует.'
+                })
 
+            # Сохраняем
             book.title = title
             book.year = year
             book.author = author
@@ -186,7 +189,19 @@ def edit_book(request, pk):
 
             return JsonResponse({'success': True})
         else:
-            return JsonResponse({'success': False, 'error': 'Проверьте корректность данных. Возможно такая книга уже есть или не заполнено обязательное поле'})
+            # 🔍 Показываем реальные ошибки формы
+            errors = []
+            for field, error_list in form.errors.items():
+                for error in error_list:
+                    if field == '__all__':
+                        errors.append(error)
+                    else:
+                        errors.append(f"{field}: {error}")
+            error_msg = "; ".join(errors)
+            return JsonResponse({
+                'success': False,
+                'error': f'Ошибка в форме: {error_msg}'
+            })
     return JsonResponse({'success': False}, status=405)
 
 
