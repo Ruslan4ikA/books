@@ -1,0 +1,55 @@
+# docker-compose.yml
+#version: '3.8'
+
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts:/docker-entrypoint-initdb.d  # для скриптов инициализации
+    env_file:
+      - .env
+    restart: unless-stopped
+
+  web:
+    build: .
+    command: >
+      sh -c "
+      python manage.py collectstatic --noinput &&
+      python manage.py migrate --noinput &&
+      gunicorn book_project.wsgi:application --bind 0.0.0.0:8000"
+    expose:
+      - "8000"
+    volumes:
+      - static_volume:/app/static
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    environment:
+      - DEBUG=0
+      - SECRET_KEY=${SECRET_KEY}
+      - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      - ALLOWED_HOSTS=localhost,127.0.0.1,web
+    env_file:
+      - .env
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:latest
+    ports:
+      - "80:80"
+    volumes:
+      - static_volume:/app/static
+      - ./nginx/app.conf:/etc/nginx/conf.d/app.conf
+    depends_on:
+      - web
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  static_volume:

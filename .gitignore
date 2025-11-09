@@ -21,3 +21,5 @@ media/
 .idea/
 *.swp
 *.swo
+
+static/

@@ -11,6 +11,9 @@ import os
 
 from django.core.wsgi import get_wsgi_application
 
+import sys
+sys.path.insert(0, '/app')
+
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'book_project.settings')
 
 application = get_wsgi_application()
